@@ -5,7 +5,12 @@ plugins {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+repositories {
+    maven { url 'http://kamatama41.github.com/maven-repository/repository' }
+}
+
 dependencies {
+    implementation 'com.github.kamatama41:nsocket:0.1.1'
 }
 
 embulk {
