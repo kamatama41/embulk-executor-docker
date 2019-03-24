@@ -41,11 +41,13 @@ class SessionManager {
         private final String sessionId;
         private final ProcessState state;
         private final CountDownLatch timer;
+        private final int inputTaskCount;
 
         State(ProcessState state, int inputTaskCount) {
             this.sessionId = UUID.randomUUID().toString();
             this.state = state;
             this.timer = new CountDownLatch(inputTaskCount);
+            this.inputTaskCount = inputTaskCount;
         }
 
         String getSessionId() {
@@ -59,23 +61,20 @@ class SessionManager {
         synchronized void update(UpdateTaskStateData data) {
             switch (data.getTaskState()) {
                 case STARTED:
-                    log.warn("started: {}", data.getTaskIndex());
                     state.getInputTaskState(data.getTaskIndex()).start();
                     state.getOutputTaskState(data.getTaskIndex()).start();
                     break;
                 case INPUT_COMMIITTED:
-                    log.warn("input_committed: {}", data.getTaskIndex());
                     state.getInputTaskState(data.getTaskIndex()).setTaskReport(getTaskReport(data.getTaskReport()));
                     break;
                 case OUTPUT_COMMITTED:
-                    log.warn("output_committed: {}", data.getTaskIndex());
                     state.getOutputTaskState(data.getTaskIndex()).setTaskReport(getTaskReport(data.getTaskReport()));
                     break;
                 case FINISHED:
-                    log.warn("finished: {}", data.getTaskIndex());
                     state.getInputTaskState(data.getTaskIndex()).finish();
                     state.getOutputTaskState(data.getTaskIndex()).finish();
                     timer.countDown();
+                    showProgress(state, inputTaskCount);
                     break;
             }
         }
@@ -91,5 +90,20 @@ class SessionManager {
 
     private TaskReport getTaskReport(String json) {
         return modelManager.readObject(TaskReport.class, json);
+    }
+
+    private static void showProgress(ProcessState state, int taskCount) {
+        int started = 0;
+        int finished = 0;
+        for (int i = 0; i < taskCount; i++) {
+            if (state.getOutputTaskState(i).isStarted()) {
+                started++;
+            }
+            if (state.getOutputTaskState(i).isFinished()) {
+                finished++;
+            }
+        }
+
+        log.info(String.format("{done:%3d / %d, running: %d}", finished, taskCount, started - finished));
     }
 }
