@@ -62,7 +62,7 @@ public class DockerExecutor implements ExecutorPlugin {
                 String pluginTaskJson = modelManager.writeObject(pluginTask);
                 String processTaskJson = modelManager.writeObject(processTask);
 
-                client.sendSyncCommand("createSession", new CreateSessionCommand.Data(sessionState.getSessionId(), sysConfig, pluginTaskJson, processTaskJson));
+                client.sendSyncCommand(CreateSessionCommand.ID, new CreateSessionCommand.Data(sessionState.getSessionId(), sysConfig, pluginTaskJson, processTaskJson));
 
                 LOGGER.info("Start #execute");
                 state.initialize(inputTaskCount, inputTaskCount);
@@ -72,7 +72,7 @@ public class DockerExecutor implements ExecutorPlugin {
                         LOGGER.warn("Skipped resumed task {}", i);
                         continue;
                     }
-                    client.sendCommand("startTask", i);
+                    client.sendCommand(StartTaskCommand.ID, i);
                 }
                 sessionState.waitUntilFinished();
             } catch (InterruptedException e) {

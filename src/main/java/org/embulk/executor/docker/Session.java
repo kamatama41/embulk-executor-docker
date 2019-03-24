@@ -39,25 +39,25 @@ class Session {
             Executors.process(session, processTask, taskIndex, new Executors.ProcessStateCallback() {
                 @Override
                 public void started() {
-                    connection.sendCommand("notifyTaskState", new UpdateTaskStateData(id, taskIndex, TaskState.STARTED));
+                    connection.sendCommand(NotifyTaskStateCommand.ID, new UpdateTaskStateData(id, taskIndex, TaskState.STARTED));
                 }
 
                 @Override
                 public void inputCommitted(TaskReport report) {
                     UpdateTaskStateData data = new UpdateTaskStateData(id, taskIndex, TaskState.INPUT_COMMIITTED);
                     data.setTaskReport(modelManager.writeObject(report));
-                    connection.sendCommand("notifyTaskState", data);
+                    connection.sendCommand(NotifyTaskStateCommand.ID, data);
                 }
 
                 @Override
                 public void outputCommitted(TaskReport report) {
                     UpdateTaskStateData data = new UpdateTaskStateData(id, taskIndex, TaskState.OUTPUT_COMMITTED);
                     data.setTaskReport(modelManager.writeObject(report));
-                    connection.sendCommand("notifyTaskState", data);
+                    connection.sendCommand(NotifyTaskStateCommand.ID, data);
                 }
             });
         } finally {
-            connection.sendCommand("notifyTaskState", new UpdateTaskStateData(id, taskIndex, TaskState.FINISHED));
+            connection.sendCommand(NotifyTaskStateCommand.ID, new UpdateTaskStateData(id, taskIndex, TaskState.FINISHED));
         }
     }
 

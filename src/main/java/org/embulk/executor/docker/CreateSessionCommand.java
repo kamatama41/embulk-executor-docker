@@ -6,6 +6,8 @@ import com.github.kamatama41.nsocket.Connection;
 import com.github.kamatama41.nsocket.SyncCommand;
 
 class CreateSessionCommand implements SyncCommand<CreateSessionCommand.Data, Void> {
+    static final String ID = "create_session";
+
     @Override
     public Void apply(CreateSessionCommand.Data data, Connection connection) throws Exception {
         Session session = new Session(data.getSessionId(), data.getSystemConfigJson(), data.getPluginTaskJson(), data.getProcessTaskJson());
@@ -16,6 +18,11 @@ class CreateSessionCommand implements SyncCommand<CreateSessionCommand.Data, Voi
     @Override
     public long getTimeoutMillis() {
         return 60000L;
+    }
+
+    @Override
+    public String getId() {
+        return ID;
     }
 
     static class Data {
