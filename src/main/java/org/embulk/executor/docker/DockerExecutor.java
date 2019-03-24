@@ -5,17 +5,17 @@ import org.embulk.config.ConfigInject;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
 import org.embulk.config.Task;
-import org.embulk.config.TaskReport;
 import org.embulk.exec.ForSystemConfig;
-import org.embulk.spi.Exec;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.Schema;
-import org.embulk.spi.util.Executors;
 import org.jruby.embed.ScriptingContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 public class DockerExecutor implements ExecutorPlugin {
     private static final Logger LOGGER = LoggerFactory.getLogger(DockerExecutor.class);
@@ -50,20 +50,35 @@ public class DockerExecutor implements ExecutorPlugin {
 
         @Override
         public void execute(ProcessTask processTask, ProcessState state) {
-            ModelManager modelManager = pluginTask.getModelManager();
-            String sysConfig = modelManager.writeObject(systemConfig);
-            String pluginTaskJson = modelManager.writeObject(pluginTask);
-            String processTaskJson = modelManager.writeObject(processTask);
-            TaskRunner taskRunner = new TaskRunner(sysConfig, pluginTaskJson, processTaskJson);
+            try (
+                    EmbulkServer server = new EmbulkServer();
+                    EmbulkClient client = new EmbulkClient(pluginTask.getModelManager())
+            ) {
+                server.start();
+                client.open();
+                ModelManager modelManager = pluginTask.getModelManager();
+                SessionManager.State sessionState = client.getSessionManager().registerNewSession(state, inputTaskCount);
+                String sysConfig = modelManager.writeObject(systemConfig);
+                String pluginTaskJson = modelManager.writeObject(pluginTask);
+                String processTaskJson = modelManager.writeObject(processTask);
 
-            LOGGER.info("Start #execute");
-            state.initialize(inputTaskCount, inputTaskCount);
-            for (int i = 0; i < inputTaskCount; i++) {
-                if (state.getOutputTaskState(i).isCommitted()) {
-                    LOGGER.warn("Skipped resumed task {}", i);
-                    continue;
+                client.sendSyncCommand("createSession", new CreateSessionCommand.Data(sessionState.getSessionId(), sysConfig, pluginTaskJson, processTaskJson));
+
+                LOGGER.info("Start #execute");
+                state.initialize(inputTaskCount, inputTaskCount);
+
+                for (int i = 0; i < inputTaskCount; i++) {
+                    if (state.getOutputTaskState(i).isCommitted()) {
+                        LOGGER.warn("Skipped resumed task {}", i);
+                        continue;
+                    }
+                    client.sendCommand("startTask", i);
                 }
-                taskRunner.run(i, state);
+                sessionState.waitUntilFinished();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
         }
     }

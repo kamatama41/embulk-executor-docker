@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.github.kamatama41:nsocket:0.1.1'
+    compile 'com.github.kamatama41:nsocket:0.2.1'
 }
 
 embulk {

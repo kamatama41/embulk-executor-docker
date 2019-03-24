@@ -1,6 +1,7 @@
 package org.embulk.executor.docker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.kamatama41.nsocket.Connection;
 import com.google.inject.Injector;
 import org.embulk.EmbulkEmbed;
 import org.embulk.config.ConfigLoader;
@@ -8,9 +9,10 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
 import org.embulk.config.TaskReport;
 import org.embulk.spi.ExecSession;
-import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.util.Executors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -19,41 +21,50 @@ import java.io.UncheckedIOException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class TaskRunner {
+class Session {
+    private static final Logger log = LoggerFactory.getLogger(Session.class);
+    private final String id;
     private final EmbulkEmbed embed;
     private final DockerExecutor.PluginTask pluginTask;
     private final ProcessTask processTask;
     private final ExecSession session;
+    private final ModelManager modelManager;
 
-    public TaskRunner(String systemConfig, String pluginTaskConfig, String processTaskConfig) {
+    Session(
+            String id, String systemConfig, String pluginTaskConfig, String processTaskConfig) {
+        this.id = id;
         this.embed = newEmbulkBootstrap(systemConfig).initialize();
         this.pluginTask = getExecutorTask(embed.getInjector(), pluginTaskConfig);
         this.processTask = getProcessTask(embed.getInjector(), processTaskConfig);
         this.session = ExecSession.builder(embed.getInjector()).build();
+        this.modelManager = embed.getModelManager();
     }
 
-    public void run(int taskIndex, ProcessState state) {
+    public void runTask(int taskIndex, Connection connection) {
         try {
             Executors.process(session, processTask, taskIndex, new Executors.ProcessStateCallback() {
                 @Override
                 public void started() {
-                    state.getInputTaskState(taskIndex).start();
-                    state.getOutputTaskState(taskIndex).start();
+                    connection.sendCommand("notifyTaskState", new UpdateTaskStateData(id, taskIndex, TaskState.STARTED));
                 }
 
                 @Override
                 public void inputCommitted(TaskReport report) {
-                    state.getInputTaskState(taskIndex).setTaskReport(report);
+                    UpdateTaskStateData data = new UpdateTaskStateData(id, taskIndex, TaskState.INPUT_COMMIITTED);
+                    data.setTaskReport(modelManager.writeObject(report));
+                    connection.sendCommand("notifyTaskState", data);
                 }
 
                 @Override
                 public void outputCommitted(TaskReport report) {
-                    state.getOutputTaskState(taskIndex).setTaskReport(report);
+                    UpdateTaskStateData data = new UpdateTaskStateData(id, taskIndex, TaskState.OUTPUT_COMMITTED);
+                    data.setTaskReport(modelManager.writeObject(report));
+                    connection.sendCommand("notifyTaskState", data);
                 }
             });
         } finally {
-            state.getInputTaskState(taskIndex).finish();
-            state.getOutputTaskState(taskIndex).finish();
+            log.warn("finished: {}", taskIndex);
+            connection.sendCommand("notifyTaskState", new UpdateTaskStateData(id, taskIndex, TaskState.FINISHED));
         }
     }
 
@@ -80,5 +91,4 @@ public class TaskRunner {
             throw new UncheckedIOException(e);
         }
     }
-
 }
