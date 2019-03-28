@@ -1,7 +1,12 @@
 package org.embulk.executor.remoteserver;
 
 import com.google.inject.Inject;
-import org.embulk.config.*;
+import org.embulk.config.Config;
+import org.embulk.config.ConfigDefault;
+import org.embulk.config.ConfigInject;
+import org.embulk.config.ConfigSource;
+import org.embulk.config.ModelManager;
+import org.embulk.config.Task;
 import org.embulk.exec.ForSystemConfig;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessState;
