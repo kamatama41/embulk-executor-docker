@@ -1,0 +1,25 @@
+plugins {
+    id "com.github.kamatama41.embulk" version "0.5.0"
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    maven { url 'http://kamatama41.github.com/maven-repository/repository' }
+}
+
+dependencies {
+    compile 'com.github.kamatama41:nsocket:0.2.8'
+}
+
+embulk {
+    version = "0.9.16"
+    category = "executor"
+    name = "docker"
+    authors = ["Shinichi Ishimura"]
+    email = "shiketaudonko41@gmail.com"
+    description = "Embulk executor plugin to run plugins on Docker container."
+    licenses = ["MIT"]
+    homepage = "https://github.com/kamatama41/embulk-executor-docker"
+}
