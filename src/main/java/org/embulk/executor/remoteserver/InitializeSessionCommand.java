@@ -25,6 +25,8 @@ class InitializeSessionCommand implements SyncCommand<InitializeSessionCommand.D
                 data.getSystemConfigJson(),
                 data.getPluginTaskJson(),
                 data.getProcessTaskJson(),
+                data.getGemSpecs(),
+                data.getPluginArchive(),
                 connection);
         return null;
     }

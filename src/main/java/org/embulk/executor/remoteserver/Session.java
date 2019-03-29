@@ -9,6 +9,7 @@ import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.util.Executors;
+import org.jruby.embed.ScriptingContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,8 +33,11 @@ class Session implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(Session.class);
     private final String id;
     private final EmbulkEmbed embed;
+    private final ScriptingContainer jruby;
     private final RemoteServerExecutor.PluginTask pluginTask;
     private final ProcessTask processTask;
+    private final List<PluginArchive.GemSpec> gemSpecs;
+    private final byte[] pluginArchive;
     private final ExecSession session;
     private final ModelManager modelManager;
     private final ConcurrentMap<Integer, Queue<UpdateTaskStateData>> bufferMap;
@@ -41,14 +48,20 @@ class Session implements AutoCloseable {
             String id,
             String systemConfig,
             String pluginTaskConfig,
-            String processTaskConfig
+            String processTaskConfig,
+            List<PluginArchive.GemSpec> gemSpecs,
+            byte[] pluginArchive
     ) {
         this.id = id;
         this.embed = newEmbulkBootstrap(systemConfig).initialize();
+        this.jruby = embed.getInjector().getInstance(ScriptingContainer.class);
         this.modelManager = embed.getModelManager();
         this.pluginTask = modelManager.readObject(RemoteServerExecutor.PluginTask.class, pluginTaskConfig);
         this.processTask = modelManager.readObject(ProcessTask.class, processTaskConfig);
+        this.gemSpecs = gemSpecs;
+        this.pluginArchive = pluginArchive;
         this.session = ExecSession.builder(embed.getInjector()).build();
+        loadPluginArchive();
         this.bufferMap = new ConcurrentHashMap<>();
         this.sessionRunner = java.util.concurrent.Executors.newCachedThreadPool(r -> {
             Thread t = new Thread(r);
@@ -142,6 +155,15 @@ class Session implements AutoCloseable {
     private static ConfigSource getSystemConfig(String configJson) {
         try (InputStream in = new ByteArrayInputStream(configJson.getBytes(UTF_8))) {
             return EmbulkEmbed.newSystemConfigLoader().fromJson(in);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private void loadPluginArchive() {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(pluginArchive)) {
+            Path gemsDir = Files.createTempDirectory("embulk_gems");
+            PluginArchive.load(gemsDir.toFile(), gemSpecs, bis).restoreLoadPathsTo(jruby);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
