@@ -64,7 +64,7 @@ class Session implements AutoCloseable {
         });
     }
 
-    private void runTask(int taskIndex) throws Exception {
+    private void runTask(int taskIndex) throws InterruptedException {
         bufferMap.putIfAbsent(taskIndex, new LinkedList<>());
         try {
             Executors.process(session, processTask, taskIndex, new Executors.ProcessStateCallback() {
@@ -87,8 +87,12 @@ class Session implements AutoCloseable {
                     sendCommand(taskIndex, data);
                 }
             });
-        } finally {
             sendCommand(taskIndex, new UpdateTaskStateData(id, taskIndex, TaskState.FINISHED));
+        } catch (Exception e){
+            log.warn(String.format("Failed to run task[%d]", taskIndex), e);
+            UpdateTaskStateData data = new UpdateTaskStateData(id, taskIndex, TaskState.FAILED);
+            data.setErrorMessage(e.getMessage());
+            sendCommand(taskIndex, data);
         }
 
         Queue<UpdateTaskStateData> buffer = bufferMap.get(taskIndex);
@@ -144,6 +148,7 @@ class Session implements AutoCloseable {
 
     @Override
     public void close() {
+        log.debug("Closing the session {}", id);
         sessionRunner.shutdownNow();
     }
 }

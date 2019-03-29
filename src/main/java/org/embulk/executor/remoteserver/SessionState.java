@@ -6,10 +6,13 @@ import org.embulk.spi.ProcessState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 class SessionState {
     private static final Logger log = LoggerFactory.getLogger(SessionState.class);
@@ -24,6 +27,7 @@ class SessionState {
     private final int inputTaskCount;
     private final ModelManager modelManager;
     private volatile boolean isFinished;
+    private final Map<Integer, String> errorMessages;
 
     SessionState(
             String systemConfigJson, String pluginTaskJson, String processTaskJson,
@@ -37,6 +41,7 @@ class SessionState {
         this.inputTaskCount = inputTaskCount;
         this.modelManager = modelManager;
         this.isFinished = false;
+        this.errorMessages = new ConcurrentHashMap<>();
     }
 
     String getSessionId() {
@@ -75,6 +80,10 @@ class SessionState {
             case OUTPUT_COMMITTED:
                 state.getOutputTaskState(data.getTaskIndex()).setTaskReport(getTaskReport(data.getTaskReport()));
                 break;
+            case FAILED:
+                errorMessages.put(data.getTaskIndex(), data.getErrorMessage());
+                timer.countDown();
+                break;
             case FINISHED:
                 state.getInputTaskState(data.getTaskIndex()).finish();
                 state.getOutputTaskState(data.getTaskIndex()).finish();
@@ -88,6 +97,12 @@ class SessionState {
         try {
             if (!timer.await(timeoutSeconds, TimeUnit.SECONDS)) {
                 throw new TimeoutException(String.format("The session (%s) was time-out.", sessionId));
+            }
+            if (!errorMessages.isEmpty()) {
+                String message = errorMessages.entrySet().stream()
+                        .map(e -> String.format("%d: %s", e.getKey(), e.getValue()))
+                        .collect(Collectors.joining(System.lineSeparator()));
+                throw new TaskExecutionException(message);
             }
         } finally {
             isFinished = true;
