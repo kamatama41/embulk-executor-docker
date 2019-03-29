@@ -6,6 +6,7 @@ import org.embulk.spi.ProcessState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,6 +22,7 @@ class SessionState {
     private final String systemConfigJson;
     private final String pluginTaskJson;
     private final String processTaskJson;
+    private final List<PluginArchive.GemSpec> gemSpecs;
     private final byte[] pluginArchiveBytes;
 
     private final ProcessState state;
@@ -31,12 +33,14 @@ class SessionState {
     private final Map<Integer, String> errorMessages;
 
     SessionState(
-            String systemConfigJson, String pluginTaskJson, String processTaskJson, byte[] pluginArchiveBytes,
+            String systemConfigJson, String pluginTaskJson, String processTaskJson,
+            List<PluginArchive.GemSpec> gemSpecs, byte[] pluginArchiveBytes,
             ProcessState state, int inputTaskCount, ModelManager modelManager) {
         this.sessionId = UUID.randomUUID().toString();
         this.systemConfigJson = systemConfigJson;
         this.pluginTaskJson = pluginTaskJson;
         this.processTaskJson = processTaskJson;
+        this.gemSpecs = gemSpecs;
         this.pluginArchiveBytes = pluginArchiveBytes;
         this.state = state;
         this.timer = new CountDownLatch(inputTaskCount);
@@ -60,6 +64,10 @@ class SessionState {
 
     String getProcessTaskJson() {
         return processTaskJson;
+    }
+
+    List<PluginArchive.GemSpec> getGemSpecs() {
+        return gemSpecs;
     }
 
     byte[] getPluginArchiveBytes() {

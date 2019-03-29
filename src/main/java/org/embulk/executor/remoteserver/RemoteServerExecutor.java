@@ -80,9 +80,11 @@ public class RemoteServerExecutor implements ExecutorPlugin {
         @Override
         public void execute(ProcessTask processTask, ProcessState state) {
             byte[] pluginArchiveBytes;
+            List<PluginArchive.GemSpec> gemSpecs;
             try {
-                File pluginArchive = archivePlugins();
-                pluginArchiveBytes = Files.readAllBytes(pluginArchive.toPath());
+                File tempFile = Exec.getTempFileSpace().createTempFile("gems", ".zip");
+                gemSpecs = archivePlugins(tempFile);
+                pluginArchiveBytes = Files.readAllBytes(tempFile.toPath());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -92,7 +94,7 @@ public class RemoteServerExecutor implements ExecutorPlugin {
             String processTaskJson = modelManager.writeObject(processTask);
 
             SessionState sessionState = new SessionState(
-                    systemConfigJson, pluginTaskJson, processTaskJson, pluginArchiveBytes, state, inputTaskCount, modelManager);
+                    systemConfigJson, pluginTaskJson, processTaskJson, gemSpecs, pluginArchiveBytes, state, inputTaskCount, modelManager);
             try (EmbulkClient client = EmbulkClient.open(sessionState, hosts)) {
                 client.createSession();
 
@@ -112,15 +114,13 @@ public class RemoteServerExecutor implements ExecutorPlugin {
             }
         }
 
-        private File archivePlugins() throws IOException {
-            // archive plugins (also create state dir)
+        private List<PluginArchive.GemSpec> archivePlugins(File tempFile) throws IOException {
+            // archive plugins
             PluginArchive archive = new PluginArchive.Builder()
                     .addLoadedRubyGems(jruby)
                     .build();
-            File tempFile = Exec.getTempFileSpace().createTempFile("gems", ".zip");
             try (FileOutputStream fos = new FileOutputStream(tempFile)) {
-                archive.dump(fos);
-                return tempFile;
+                return archive.dump(fos);
             }
         }
     }
