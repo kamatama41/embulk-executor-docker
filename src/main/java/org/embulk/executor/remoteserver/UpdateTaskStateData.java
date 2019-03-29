@@ -8,6 +8,7 @@ class UpdateTaskStateData {
     private int taskIndex;
     private TaskState taskState;
     private String taskReport;
+    private String errorMessage;
 
     @JsonCreator
     UpdateTaskStateData(
@@ -41,5 +42,14 @@ class UpdateTaskStateData {
 
     void setTaskReport(String taskReport) {
         this.taskReport = taskReport;
+    }
+
+    @JsonProperty
+    String getErrorMessage() {
+        return errorMessage;
+    }
+
+    void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }

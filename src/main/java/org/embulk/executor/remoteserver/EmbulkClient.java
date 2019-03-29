@@ -103,7 +103,9 @@ class EmbulkClient implements AutoCloseable {
                 sessionState.getSessionId(),
                 sessionState.getSystemConfigJson(),
                 sessionState.getPluginTaskJson(),
-                sessionState.getProcessTaskJson()
+                sessionState.getProcessTaskJson(),
+                sessionState.getGemSpecs(),
+                sessionState.getPluginArchiveBytes()
         );
     }
 }

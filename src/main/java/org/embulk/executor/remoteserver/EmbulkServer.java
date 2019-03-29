@@ -16,6 +16,7 @@ public class EmbulkServer implements AutoCloseable {
         SessionManager sessionManager = new SessionManager();
         server.setHost(host);
         server.setPort(port);
+        server.setDefaultContentBufferSize(4 * 1024 * 1024); // 4MB
         server.setNumOfWorkers(numOfWorkers);
         server.registerSyncCommand(new InitializeSessionCommand(sessionManager));
         server.registerSyncCommand(new RemoveSessionCommand(sessionManager));
