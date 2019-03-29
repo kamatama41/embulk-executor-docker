@@ -8,6 +8,7 @@ import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
 import org.embulk.config.Task;
 import org.embulk.exec.ForSystemConfig;
+import org.embulk.spi.Exec;
 import org.embulk.spi.ExecutorPlugin;
 import org.embulk.spi.ProcessState;
 import org.embulk.spi.ProcessTask;
@@ -16,8 +17,11 @@ import org.jruby.embed.ScriptingContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
@@ -75,13 +79,20 @@ public class RemoteServerExecutor implements ExecutorPlugin {
 
         @Override
         public void execute(ProcessTask processTask, ProcessState state) {
+            byte[] pluginArchiveBytes;
+            try {
+                File pluginArchive = archivePlugins();
+                pluginArchiveBytes = Files.readAllBytes(pluginArchive.toPath());
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
             ModelManager modelManager = pluginTask.getModelManager();
             String systemConfigJson = modelManager.writeObject(systemConfig);
             String pluginTaskJson = modelManager.writeObject(pluginTask);
             String processTaskJson = modelManager.writeObject(processTask);
 
             SessionState sessionState = new SessionState(
-                    systemConfigJson, pluginTaskJson, processTaskJson, state, inputTaskCount, modelManager);
+                    systemConfigJson, pluginTaskJson, processTaskJson, pluginArchiveBytes, state, inputTaskCount, modelManager);
             try (EmbulkClient client = EmbulkClient.open(sessionState, hosts)) {
                 client.createSession();
 
@@ -98,6 +109,18 @@ public class RemoteServerExecutor implements ExecutorPlugin {
                 throw new IllegalStateException(e);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
+            }
+        }
+
+        private File archivePlugins() throws IOException {
+            // archive plugins (also create state dir)
+            PluginArchive archive = new PluginArchive.Builder()
+                    .addLoadedRubyGems(jruby)
+                    .build();
+            File tempFile = Exec.getTempFileSpace().createTempFile("gems", ".zip");
+            try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                archive.dump(fos);
+                return tempFile;
             }
         }
     }

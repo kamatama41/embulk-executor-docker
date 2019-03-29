@@ -42,16 +42,19 @@ class InitializeSessionCommand implements SyncCommand<InitializeSessionCommand.D
         private String systemConfigJson;
         private String pluginTaskJson;
         private String processTaskJson;
+        private byte[] pluginArchive;
 
         @JsonCreator
         Data(@JsonProperty("sessionId") String sessionId,
              @JsonProperty("systemConfigJson") String systemConfigJson,
              @JsonProperty("pluginTaskJson") String pluginTaskJson,
-             @JsonProperty("processTaskJson") String processTaskJson) {
+             @JsonProperty("processTaskJson") String processTaskJson,
+             @JsonProperty("pluginArchive") byte[] pluginArchive) {
             this.sessionId = sessionId;
             this.systemConfigJson = systemConfigJson;
             this.pluginTaskJson = pluginTaskJson;
             this.processTaskJson = processTaskJson;
+            this.pluginArchive = pluginArchive;
         }
 
         @JsonProperty
@@ -72,6 +75,11 @@ class InitializeSessionCommand implements SyncCommand<InitializeSessionCommand.D
         @JsonProperty
         String getProcessTaskJson() {
             return processTaskJson;
+        }
+
+        @JsonProperty
+        byte[] getPluginArchive() {
+            return pluginArchive;
         }
     }
 }

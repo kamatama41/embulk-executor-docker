@@ -21,6 +21,7 @@ class SessionState {
     private final String systemConfigJson;
     private final String pluginTaskJson;
     private final String processTaskJson;
+    private final byte[] pluginArchiveBytes;
 
     private final ProcessState state;
     private final CountDownLatch timer;
@@ -30,12 +31,13 @@ class SessionState {
     private final Map<Integer, String> errorMessages;
 
     SessionState(
-            String systemConfigJson, String pluginTaskJson, String processTaskJson,
+            String systemConfigJson, String pluginTaskJson, String processTaskJson, byte[] pluginArchiveBytes,
             ProcessState state, int inputTaskCount, ModelManager modelManager) {
         this.sessionId = UUID.randomUUID().toString();
         this.systemConfigJson = systemConfigJson;
         this.pluginTaskJson = pluginTaskJson;
         this.processTaskJson = processTaskJson;
+        this.pluginArchiveBytes = pluginArchiveBytes;
         this.state = state;
         this.timer = new CountDownLatch(inputTaskCount);
         this.inputTaskCount = inputTaskCount;
@@ -58,6 +60,10 @@ class SessionState {
 
     String getProcessTaskJson() {
         return processTaskJson;
+    }
+
+    byte[] getPluginArchiveBytes() {
+        return pluginArchiveBytes;
     }
 
     ProcessState getState() {
