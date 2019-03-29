@@ -5,6 +5,7 @@ import org.embulk.EmbulkEmbed;
 import org.embulk.config.ConfigSource;
 import org.embulk.config.ModelManager;
 import org.embulk.config.TaskReport;
+import org.embulk.spi.Exec;
 import org.embulk.spi.ExecSession;
 import org.embulk.spi.ProcessTask;
 import org.embulk.spi.util.Executors;
@@ -58,10 +59,10 @@ class Session implements AutoCloseable {
     }
 
     void runTaskAsynchronously(int taskIndex) {
-        sessionRunner.submit(() -> {
+        sessionRunner.submit(() -> Exec.doWith(session, () -> {
             runTask(taskIndex);
             return null;
-        });
+        }));
     }
 
     private void runTask(int taskIndex) throws InterruptedException {
@@ -88,7 +89,7 @@ class Session implements AutoCloseable {
                 }
             });
             sendCommand(taskIndex, new UpdateTaskStateData(id, taskIndex, TaskState.FINISHED));
-        } catch (Exception e){
+        } catch (Exception e) {
             log.warn(String.format("Failed to run task[%d]", taskIndex), e);
             UpdateTaskStateData data = new UpdateTaskStateData(id, taskIndex, TaskState.FAILED);
             data.setErrorMessage(e.getMessage());
