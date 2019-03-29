@@ -4,14 +4,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.kamatama41.nsocket.Connection;
 import com.github.kamatama41.nsocket.SyncCommand;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 class InitializeSessionCommand implements SyncCommand<InitializeSessionCommand.Data, Void> {
     static final String ID = "initialize_session";
-    private static final Logger log = LoggerFactory.getLogger(InitializeSessionCommand.class);
     private final SessionManager sessionManager;
 
     InitializeSessionCommand(SessionManager sessionManager) {
