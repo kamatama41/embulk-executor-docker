@@ -18,8 +18,10 @@ configurations {
 
 dependencies {
     compile("com.github.kamatama41:nsocket:0.2.10") {
+        // Use embulk-core's Jackson (2.6.7) instead
         exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
     }
+    // Followings are needed for running EmbulkServer
     runtime "org.embulk:embulk-standards:0.9.16"
     runtime "ch.qos.logback:logback-classic:1.2.3"
     runtime "ch.qos.logback:logback-core:1.2.3"
