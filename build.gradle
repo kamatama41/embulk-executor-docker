@@ -10,8 +10,14 @@ repositories {
     maven { url 'http://kamatama41.github.com/maven-repository/repository' }
 }
 
+configurations {
+    [compileClasspath, testCompileClasspath].each {
+        it.resolutionStrategy.activateDependencyLocking()
+    }
+}
+
 dependencies {
-    compile("com.github.kamatama41:nsocket:0.2.9") {
+    compile("com.github.kamatama41:nsocket:0.2.10") {
         exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
     }
     runtime "org.embulk:embulk-standards:0.9.16"
