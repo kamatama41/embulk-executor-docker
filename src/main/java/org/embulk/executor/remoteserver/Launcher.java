@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class Launcher {
     public static void main(String[] args) throws IOException {
-        String host = "localhost";
+        String host = "0.0.0.0";
         int port = 30001;
         int numOfWorkers = 1;
         if (args.length == 3) {
