@@ -5,19 +5,15 @@ import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class Launcher {
     public static void main(String[] args) throws IOException {
-        String host = "0.0.0.0";
-        int port = 30001;
-        int numOfWorkers = 1;
-        Level logLevel = Level.INFO;
-        if (args.length == 4) {
-            host = args[0];
-            port = Integer.parseInt(args[1]);
-            numOfWorkers = Integer.parseInt(args[2]);
-            logLevel = Level.toLevel(args[3]);
-        }
+        Map<String, String> envVars = System.getenv();
+        String host = envVars.getOrDefault("BIND_ADDRESS", "0.0.0.0");
+        int port = Integer.parseInt(envVars.getOrDefault("PORT", "30001"));
+        int numOfWorkers = Integer.parseInt(envVars.getOrDefault("NUM_OF_WORKERS", "1"));
+        Level logLevel = Level.toLevel(envVars.getOrDefault("LOG_LEVEL", "info"));
         configureLogLevel(logLevel);
         EmbulkServer.start(host, port, numOfWorkers);
     }
