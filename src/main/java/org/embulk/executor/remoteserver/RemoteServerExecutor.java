@@ -88,8 +88,12 @@ public class RemoteServerExecutor implements ExecutorPlugin {
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
+            // Remove 'jruby_global_bundler_plugin_source_directory' (--bundle option)
+            // because all gems will be loaded via PluginArchive on server
+            ConfigSource systemConfigToSend = systemConfig.deepCopy().remove("jruby_global_bundler_plugin_source_directory");
+
             ModelManager modelManager = pluginTask.getModelManager();
-            String systemConfigJson = modelManager.writeObject(systemConfig);
+            String systemConfigJson = modelManager.writeObject(systemConfigToSend);
             String pluginTaskJson = modelManager.writeObject(pluginTask);
             String processTaskJson = modelManager.writeObject(processTask);
 
