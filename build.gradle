@@ -11,6 +11,9 @@ repositories {
 }
 
 configurations {
+    serverRuntime
+    serverRuntime.extendsFrom runtime, testRuntime
+
     [compileClasspath, testCompileClasspath].each {
         it.resolutionStrategy.activateDependencyLocking()
     }
@@ -23,16 +26,19 @@ dependencies {
     }
     // Followings are needed for running EmbulkServer
     implementation "org.embulk:embulk-standards:0.9.16"
+    serverRuntime "org.embulk:embulk-standards:0.9.16"
     implementation "ch.qos.logback:logback-classic:1.2.3"
+    serverRuntime "ch.qos.logback:logback-classic:1.2.3"
     implementation "ch.qos.logback:logback-core:1.2.3"
+    serverRuntime "ch.qos.logback:logback-core:1.2.3"
 }
 
 task executableEmbulkServer(type: Jar) {
     manifest {
-        attributes 'Main-Class': 'org.embulk.executor.remoteserver.Launcher'
+        attributes 'Main-Class': "org.embulk.executor.remoteserver.Launcher"
     }
     baseName = 'embulk-server'
-    from { (configurations.runtime).collect { it.isDirectory() ? it : zipTree(it) } }
+    from { (sourceSets.main.output + configurations.serverRuntime).collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
 }
 
