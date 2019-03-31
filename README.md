@@ -1,6 +1,6 @@
-# Docker executor plugin for Embulk
+# Remote server executor plugin for Embulk
 
-TODO: Write short description here and build.gradle file.
+Embulk executor plugin to run plugins on remote server.
 
 ## Overview
 
@@ -8,17 +8,18 @@ TODO: Write short description here and build.gradle file.
 
 ## Configuration
 
-- **option1**: description (integer, required)
-- **option2**: description (string, default: `"myvalue"`)
-- **option3**: description (string, default: `null`)
+- **hosts**: List of remote servers. If not specified, the executor runs as local mode, which start Embulk server on its own process (array of string)
+- **timeout_seconds**: Timeout seconds of the whole execution (integer, default: `3600`)
 
 ## Example
 
 ```yaml
 exec:
-  type: docker
-  option1: example1
-  option2: example2
+  type: remoteserver
+  hosts:
+    - {name:remote-server1.com, port:30001}
+    - {name:remote-server2.com, port:30001}
+  timeout_seconds: 86400
 ```
 
 
