@@ -1,6 +1,7 @@
 plugins {
     id "java"
     id "com.github.kamatama41.embulk" version "0.5.2"
+    id "net.researchgate.release" version "2.8.0"
 }
 
 sourceCompatibility = 1.8
@@ -62,3 +63,8 @@ embulk {
 test {
     useJUnitPlatform()
 }
+
+release {
+    git { requireBranch = 'master' }
+}
+afterReleaseBuild.dependsOn gemPush
