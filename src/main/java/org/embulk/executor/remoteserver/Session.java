@@ -79,6 +79,7 @@ class Session implements AutoCloseable {
     }
 
     private void runTask(int taskIndex) throws InterruptedException {
+        long startTime = System.currentTimeMillis();
         bufferMap.putIfAbsent(taskIndex, new LinkedList<>());
         try {
             Executors.process(session, processTask, taskIndex, new Executors.ProcessStateCallback() {
@@ -116,7 +117,7 @@ class Session implements AutoCloseable {
 
         // Flush buffer if remaining
         int waitSeconds = 10;
-        while (!buffer.isEmpty()) {
+        while (!buffer.isEmpty() && (System.currentTimeMillis() - startTime) <= pluginTask.getTimeoutSeconds() * 1000) {
             if (connection.isOpen()) {
                 flushBuffer(taskIndex, connection);
                 return;
@@ -124,6 +125,7 @@ class Session implements AutoCloseable {
             log.warn("Connection is closed, wait {} seconds until reconnected.", waitSeconds);
             TimeUnit.SECONDS.sleep(waitSeconds);
         }
+        log.warn("Connection was not able to be available again.");
     }
 
     void updateConnection(Connection connection) {
