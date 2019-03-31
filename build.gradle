@@ -55,9 +55,9 @@ embulk {
     name = "docker"
     authors = ["Shinichi Ishimura"]
     email = "shiketaudonko41@gmail.com"
-    description = "Embulk executor plugin to run plugins on Docker container."
+    description = "Embulk executor plugin to run plugins on remote server."
     licenses = ["MIT"]
-    homepage = "https://github.com/kamatama41/embulk-executor-docker"
+    homepage = "https://github.com/kamatama41/embulk-executor-remoteserver"
 }
 
 test {
