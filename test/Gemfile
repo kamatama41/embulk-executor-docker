@@ -1,0 +1,4 @@
+source 'https://rubygems.org/'
+
+gem 'embulk'
+gem 'embulk-filter-hash', '= 0.5.0'
