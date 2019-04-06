@@ -9,15 +9,15 @@ import java.util.List;
 
 class InitializeSessionCommand implements SyncCommand<InitializeSessionCommand.Data, Void> {
     static final String ID = "initialize_session";
-    private final SessionManager sessionManager;
+    private final ServerSessionRegistry sessionRegistry;
 
-    InitializeSessionCommand(SessionManager sessionManager) {
-        this.sessionManager = sessionManager;
+    InitializeSessionCommand(ServerSessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry;
     }
 
     @Override
     public Void apply(Data data, Connection connection) {
-        sessionManager.registerNewSession(
+        sessionRegistry.register(
                 data.getSessionId(),
                 data.getSystemConfigJson(),
                 data.getPluginTaskJson(),

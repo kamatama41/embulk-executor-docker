@@ -5,15 +5,15 @@ import com.github.kamatama41.nsocket.Connection;
 
 class NotifyTaskStateCommand implements Command<UpdateTaskStateData> {
     static final String ID = "notify_task_state";
-    private final SessionState sessionState;
+    private final ClientSession session;
 
-    NotifyTaskStateCommand(SessionState sessionState) {
-        this.sessionState = sessionState;
+    NotifyTaskStateCommand(ClientSession session) {
+        this.session = session;
     }
 
     @Override
     public void execute(UpdateTaskStateData data, Connection connection) throws Exception {
-        sessionState.update(data);
+        session.update(data);
     }
 
     @Override

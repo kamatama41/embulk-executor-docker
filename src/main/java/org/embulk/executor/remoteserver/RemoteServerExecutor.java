@@ -97,9 +97,9 @@ public class RemoteServerExecutor implements ExecutorPlugin {
             String pluginTaskJson = modelManager.writeObject(pluginTask);
             String processTaskJson = modelManager.writeObject(processTask);
 
-            SessionState sessionState = new SessionState(
+            ClientSession session = new ClientSession(
                     systemConfigJson, pluginTaskJson, processTaskJson, gemSpecs, pluginArchiveBytes, state, inputTaskCount, modelManager);
-            try (EmbulkClient client = EmbulkClient.open(sessionState, hosts)) {
+            try (EmbulkClient client = EmbulkClient.open(session, hosts)) {
                 client.createSession();
 
                 state.initialize(inputTaskCount, inputTaskCount);
@@ -110,7 +110,7 @@ public class RemoteServerExecutor implements ExecutorPlugin {
                     }
                     client.startTask(i);
                 }
-                sessionState.waitUntilCompleted(pluginTask.getTimeoutSeconds() + 1); // Add 1 sec to consider network latency
+                session.waitUntilCompleted(pluginTask.getTimeoutSeconds() + 1); // Add 1 sec to consider network latency
             } catch (InterruptedException | TimeoutException e) {
                 throw new IllegalStateException(e);
             } catch (IOException e) {
