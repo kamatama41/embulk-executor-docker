@@ -7,7 +7,7 @@ import java.io.IOException;
 public class EmbulkServer implements AutoCloseable {
     private SocketServer server;
 
-    EmbulkServer(SocketServer  server) {
+    private EmbulkServer(SocketServer  server) {
         this.server = server;
     }
 
