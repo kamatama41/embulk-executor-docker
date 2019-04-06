@@ -74,10 +74,6 @@ class SessionState {
         return pluginArchiveBytes;
     }
 
-    ProcessState getState() {
-        return state;
-    }
-
     boolean isFinished() {
         return isFinished;
     }
