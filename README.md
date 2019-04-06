@@ -12,7 +12,7 @@ Embulk executor plugin to run Embulk tasks on remote servers.
 
 ## Configuration
 
-- **hosts**: List of remote servers. If not specified, the executor runs as local mode, which start Embulk server on its own process (array of hash)
+- **hosts**: List of remote servers (`hostname` or `hostname:port`, default port is `30001`). If not specified, the executor runs as local mode, which start Embulk server on its own process (array of string)
 - **timeout_seconds**: Timeout seconds of the whole execution (integer, default: `3600`)
 
 ## Example
@@ -21,8 +21,8 @@ Embulk executor plugin to run Embulk tasks on remote servers.
 exec:
   type: remoteserver
   hosts:
-    - {name:remote-server1.com, port:30001}
-    - {name:remote-server2.com, port:30001}
+    - embulk-server1.local
+    - embulk-server2.local:30002
   timeout_seconds: 86400
 ```
 
