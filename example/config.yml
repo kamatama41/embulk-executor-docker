@@ -1,0 +1,25 @@
+in:
+  type: file
+  path_prefix: work/input_
+  parser:
+    type: json
+    columns:
+      - {name: id, type: long}
+      - {name: name, type: string}
+filters:
+  - type: add_time
+    to_column:
+      name: time
+      type: timestamp
+    from_value:
+      mode: upload_time
+exec:
+  type: remoteserver
+  hosts:
+    - localhost:30001
+out:
+  type: file
+  path_prefix: work/output_
+  file_ext: csv
+  formatter:
+    type: csv
