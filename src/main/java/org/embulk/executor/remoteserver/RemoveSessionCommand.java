@@ -5,15 +5,15 @@ import com.github.kamatama41.nsocket.SyncCommand;
 
 public class RemoveSessionCommand implements SyncCommand<String, Void> {
     static final String ID = "remove_session";
-    private final SessionManager sessionManager;
+    private final ServerSessionRegistry sessionRegistry;
 
-    RemoveSessionCommand(SessionManager sessionManager) {
-        this.sessionManager = sessionManager;
+    RemoveSessionCommand(ServerSessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry;
     }
 
     @Override
     public Void apply(String sessionId, Connection connection) {
-        sessionManager.removeSession(sessionId);
+        sessionRegistry.remove(sessionId);
         return null;
     }
 

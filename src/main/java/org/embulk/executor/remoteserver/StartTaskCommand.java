@@ -7,15 +7,15 @@ import com.github.kamatama41.nsocket.Connection;
 
 class StartTaskCommand implements Command<StartTaskCommand.Data> {
     static final String ID = "start_task";
-    private final SessionManager sessionManager;
+    private final ServerSessionRegistry sessionRegistry;
 
-    StartTaskCommand(SessionManager sessionManager) {
-        this.sessionManager = sessionManager;
+    StartTaskCommand(ServerSessionRegistry sessionRegistry) {
+        this.sessionRegistry = sessionRegistry;
     }
 
     @Override
     public void execute(Data data, Connection connection) {
-        Session session = sessionManager.getSession(data.getSessionId());
+        ServerSession session = sessionRegistry.get(data.getSessionId());
         if (session == null) {
             throw new IllegalStateException("Session is not created.");
         }

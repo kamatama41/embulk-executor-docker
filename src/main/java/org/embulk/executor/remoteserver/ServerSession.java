@@ -29,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-class Session implements AutoCloseable {
-    private static final Logger log = LoggerFactory.getLogger(Session.class);
+class ServerSession implements AutoCloseable {
+    private static final Logger log = LoggerFactory.getLogger(ServerSession.class);
     private final String id;
     private final EmbulkEmbed embed;
     private final ScriptingContainer jruby;
@@ -44,7 +44,7 @@ class Session implements AutoCloseable {
     private final ExecutorService sessionRunner;
     private volatile Connection connection;
 
-    Session(
+    ServerSession(
             String id,
             String systemConfig,
             String pluginTaskConfig,
@@ -145,7 +145,7 @@ class Session implements AutoCloseable {
         UpdateTaskStateData data;
         Queue<UpdateTaskStateData> buffer = bufferMap.get(taskIndex);
         while ((data = buffer.poll()) != null) {
-            connection.sendCommand(NotifyTaskStateCommand.ID, data);
+            connection.sendCommand(UpdateTaskStateCommand.ID, data);
         }
     }
 
