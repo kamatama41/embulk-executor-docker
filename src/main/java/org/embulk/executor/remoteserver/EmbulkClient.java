@@ -4,9 +4,10 @@ import com.github.kamatama41.nsocket.CommandListener;
 import com.github.kamatama41.nsocket.Connection;
 import com.github.kamatama41.nsocket.SocketClient;
 import org.embulk.config.ConfigException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -15,39 +16,52 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class EmbulkClient implements AutoCloseable {
-    private final SocketClient client;
-    private final List<Host> hosts;
+class EmbulkClient extends SocketClient implements AutoCloseable {
+    private static final Logger log = LoggerFactory.getLogger(EmbulkClient.class);
     private final ClientSession session;
-    private final AtomicInteger counter = new AtomicInteger(1);
+    private final AtomicInteger counter;
 
-    private EmbulkClient(SocketClient client, List<Host> hosts, ClientSession session) {
-        this.client = client;
-        this.hosts = hosts;
+    private EmbulkClient(ClientSession session) {
+        super();
         this.session = session;
+        this.counter = new AtomicInteger(0);
     }
 
     static EmbulkClient open(
             ClientSession session,
             List<Host> hosts) throws IOException {
-        SocketClient client = new SocketClient();
-        client.registerSyncCommand(new InitializeSessionCommand(null));
-        client.registerSyncCommand(new RemoveSessionCommand(null));
-        client.registerCommand(new UpdateTaskStateCommand(session));
-        client.registerListener(new Reconnector(client, session));
+        EmbulkClient client = new EmbulkClient(session);
         client.open();
+
         for (Host host : hosts) {
-            client.addNode(host.toAddress());
+            try {
+                client.addNode(host.toAddress());
+            } catch (IOException e) {
+                log.warn(String.format("Failed to connect to %s", host.toString()), e);
+            }
         }
-        return new EmbulkClient(client, hosts, session);
+
+        if (client.getActiveConnections().isEmpty()) {
+            throw new IOException("Failed to connect all hosts");
+        }
+        return client;
+    }
+
+    @Override
+    public synchronized void open() throws IOException {
+        registerSyncCommand(new InitializeSessionCommand(null));
+        registerSyncCommand(new RemoveSessionCommand(null));
+        registerCommand(new UpdateTaskStateCommand(session));
+        registerListener(new Reconnector());
+        super.open();
     }
 
     void createSession() {
-        ExecutorService es = Executors.newFixedThreadPool(hosts.size());
+        List<Connection> activeConnections = getActiveConnections();
+        ExecutorService es = Executors.newFixedThreadPool(activeConnections.size());
         List<Future> futures = new ArrayList<>();
-        for (Host host : hosts) {
+        for (Connection connection : activeConnections) {
             futures.add(es.submit(() -> {
-                Connection connection = client.getConnection(host.toAddress());
                 connection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(session));
             }));
         }
@@ -66,34 +80,30 @@ class EmbulkClient implements AutoCloseable {
 
     void startTask(int taskIndex) {
         // Round robin (more smart logic needed?)
-        InetSocketAddress target = hosts.get(counter.getAndIncrement() % hosts.size()).toAddress();
-        client.getConnection(target).sendCommand(
-                StartTaskCommand.ID, new StartTaskCommand.Data(session.getId(), taskIndex));
+        List<Connection> activeConnections = getActiveConnections();
+        Connection target = activeConnections.get(counter.getAndIncrement() % activeConnections.size());
+        target.sendCommand(StartTaskCommand.ID, new StartTaskCommand.Data(session.getId(), taskIndex));
     }
 
     @Override
     public void close() throws IOException {
-        for (Host host : hosts) {
-            Connection connection = client.getConnection(host.toAddress());
+        for (Connection connection : getActiveConnections()) {
             connection.sendSyncCommand(RemoveSessionCommand.ID, session.getId());
         }
-        client.close();
+        super.close();
     }
 
-    private static class Reconnector implements CommandListener {
-        private final SocketClient client;
-        private final ClientSession session;
-
-        Reconnector(SocketClient client, ClientSession session) {
-            this.client = client;
-            this.session = session;
-        }
-
+    private class Reconnector implements CommandListener {
         @Override
         public void onDisconnected(Connection connection) {
             if(!session.isFinished()) {
-                Connection newConnection = client.getConnection((InetSocketAddress) connection.getRemoteSocketAddress());
-                newConnection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(session));
+                try {
+                    // Try reconnecting
+                    Connection newConnection = reconnect(connection);
+                    newConnection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(session));
+                } catch (IOException e) {
+                    log.warn(String.format("A connection to %s could not be reconnected.", connection.getRemoteSocketAddress()), e);
+                }
             }
         }
     }

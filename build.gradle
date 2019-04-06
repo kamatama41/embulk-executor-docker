@@ -21,7 +21,7 @@ configurations {
 }
 
 dependencies {
-    compile("com.github.kamatama41:nsocket:0.2.10") {
+    compile("com.github.kamatama41:nsocket:0.2.13") {
         // Use embulk-core's Jackson (2.6.7) instead
         exclude group: "com.fasterxml.jackson.core", module: "jackson-databind"
     }

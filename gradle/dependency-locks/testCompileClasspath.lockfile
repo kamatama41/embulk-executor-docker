@@ -12,7 +12,7 @@ com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.6.7
 com.fasterxml.jackson.datatype:jackson-datatype-joda:2.6.7
 com.fasterxml.jackson.module:jackson-module-guice:2.6.7
 com.github.kamatama41:embulk-test-helpers:0.8.0
-com.github.kamatama41:nsocket:0.2.10
+com.github.kamatama41:nsocket:0.2.13
 com.google.code.findbugs:annotations:3.0.0
 com.google.guava:guava:18.0
 com.google.inject.extensions:guice-multibindings:4.0
