@@ -1,0 +1,8 @@
+version: '3.2'
+services:
+  remote1:
+    image: kamatama41/embulk-executor-remoteserver
+    ports:
+      - "30001:30001"
+    volumes:
+      - ./work:/root/work
