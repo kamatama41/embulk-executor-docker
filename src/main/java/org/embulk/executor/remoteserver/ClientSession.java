@@ -15,10 +15,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-class SessionState {
-    private static final Logger log = LoggerFactory.getLogger(SessionState.class);
+class ClientSession {
+    private static final Logger log = LoggerFactory.getLogger(ClientSession.class);
 
-    private String sessionId;
+    private final String id;
     private final String systemConfigJson;
     private final String pluginTaskJson;
     private final String processTaskJson;
@@ -32,11 +32,11 @@ class SessionState {
     private volatile boolean isFinished;
     private final Map<Integer, String> errorMessages;
 
-    SessionState(
+    ClientSession(
             String systemConfigJson, String pluginTaskJson, String processTaskJson,
             List<PluginArchive.GemSpec> gemSpecs, byte[] pluginArchiveBytes,
             ProcessState state, int inputTaskCount, ModelManager modelManager) {
-        this.sessionId = UUID.randomUUID().toString();
+        this.id = UUID.randomUUID().toString();
         this.systemConfigJson = systemConfigJson;
         this.pluginTaskJson = pluginTaskJson;
         this.processTaskJson = processTaskJson;
@@ -50,8 +50,8 @@ class SessionState {
         this.errorMessages = new ConcurrentHashMap<>();
     }
 
-    String getSessionId() {
-        return sessionId;
+    String getId() {
+        return id;
     }
 
     String getSystemConfigJson() {
@@ -72,10 +72,6 @@ class SessionState {
 
     byte[] getPluginArchiveBytes() {
         return pluginArchiveBytes;
-    }
-
-    ProcessState getState() {
-        return state;
     }
 
     boolean isFinished() {
@@ -110,7 +106,7 @@ class SessionState {
     void waitUntilCompleted(int timeoutSeconds) throws InterruptedException, TimeoutException {
         try {
             if (!timer.await(timeoutSeconds, TimeUnit.SECONDS)) {
-                throw new TimeoutException(String.format("The session (%s) was time-out.", sessionId));
+                throw new TimeoutException(String.format("The session (%s) was time-out.", id));
             }
             if (!errorMessages.isEmpty()) {
                 String message = errorMessages.entrySet().stream()

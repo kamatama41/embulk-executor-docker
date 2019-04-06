@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @EmbulkTest(value = RemoteServerExecutor.class, name = "remoteserver")
 class TestRemoteServerExecutor extends EmbulkPluginTest {
-    private static final List<Host> HOSTS = Arrays.asList(new Host("localhost", 24224), new Host("localhost", 24225));
+    private static final List<String> HOSTS = Arrays.asList("localhost", "localhost:30002");
     private static final Path OUTPUT_DIR = Paths.get("tmp", "output");
     private static final Path TEST_DIR = Paths.get("test");
 

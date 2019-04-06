@@ -18,28 +18,28 @@ import java.util.concurrent.atomic.AtomicInteger;
 class EmbulkClient implements AutoCloseable {
     private final SocketClient client;
     private final List<Host> hosts;
-    private final SessionState sessionState;
+    private final ClientSession session;
     private final AtomicInteger counter = new AtomicInteger(1);
 
-    private EmbulkClient(SocketClient client, List<Host> hosts, SessionState sessionState) {
+    private EmbulkClient(SocketClient client, List<Host> hosts, ClientSession session) {
         this.client = client;
         this.hosts = hosts;
-        this.sessionState = sessionState;
+        this.session = session;
     }
 
     static EmbulkClient open(
-            SessionState sessionState,
+            ClientSession session,
             List<Host> hosts) throws IOException {
         SocketClient client = new SocketClient();
         client.registerSyncCommand(new InitializeSessionCommand(null));
         client.registerSyncCommand(new RemoveSessionCommand(null));
-        client.registerCommand(new NotifyTaskStateCommand(sessionState));
-        client.registerListener(new Reconnector(client, sessionState));
+        client.registerCommand(new UpdateTaskStateCommand(session));
+        client.registerListener(new Reconnector(client, session));
         client.open();
         for (Host host : hosts) {
             client.addNode(host.toAddress());
         }
-        return new EmbulkClient(client, hosts, sessionState);
+        return new EmbulkClient(client, hosts, session);
     }
 
     void createSession() {
@@ -48,7 +48,7 @@ class EmbulkClient implements AutoCloseable {
         for (Host host : hosts) {
             futures.add(es.submit(() -> {
                 Connection connection = client.getConnection(host.toAddress());
-                connection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(sessionState));
+                connection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(session));
             }));
         }
         try {
@@ -68,44 +68,44 @@ class EmbulkClient implements AutoCloseable {
         // Round robin (more smart logic needed?)
         InetSocketAddress target = hosts.get(counter.getAndIncrement() % hosts.size()).toAddress();
         client.getConnection(target).sendCommand(
-                StartTaskCommand.ID, new StartTaskCommand.Data(sessionState.getSessionId(), taskIndex));
+                StartTaskCommand.ID, new StartTaskCommand.Data(session.getId(), taskIndex));
     }
 
     @Override
     public void close() throws IOException {
         for (Host host : hosts) {
             Connection connection = client.getConnection(host.toAddress());
-            connection.sendSyncCommand(RemoveSessionCommand.ID, sessionState.getSessionId());
+            connection.sendSyncCommand(RemoveSessionCommand.ID, session.getId());
         }
         client.close();
     }
 
     private static class Reconnector implements CommandListener {
         private final SocketClient client;
-        private final SessionState sessionState;
+        private final ClientSession session;
 
-        Reconnector(SocketClient client, SessionState sessionState) {
+        Reconnector(SocketClient client, ClientSession session) {
             this.client = client;
-            this.sessionState = sessionState;
+            this.session = session;
         }
 
         @Override
         public void onDisconnected(Connection connection) {
-            if(!sessionState.isFinished()) {
+            if(!session.isFinished()) {
                 Connection newConnection = client.getConnection((InetSocketAddress) connection.getRemoteSocketAddress());
-                newConnection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(sessionState));
+                newConnection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(session));
             }
         }
     }
 
-    private static InitializeSessionCommand.Data toInitializeSessionData(SessionState sessionState) {
+    private static InitializeSessionCommand.Data toInitializeSessionData(ClientSession session) {
         return new InitializeSessionCommand.Data(
-                sessionState.getSessionId(),
-                sessionState.getSystemConfigJson(),
-                sessionState.getPluginTaskJson(),
-                sessionState.getProcessTaskJson(),
-                sessionState.getGemSpecs(),
-                sessionState.getPluginArchiveBytes()
+                session.getId(),
+                session.getSystemConfigJson(),
+                session.getPluginTaskJson(),
+                session.getProcessTaskJson(),
+                session.getGemSpecs(),
+                session.getPluginArchiveBytes()
         );
     }
 }

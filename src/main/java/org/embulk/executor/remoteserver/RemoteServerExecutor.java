@@ -25,17 +25,18 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 public class RemoteServerExecutor implements ExecutorPlugin {
     private static final Logger log = LoggerFactory.getLogger(RemoteServerExecutor.class);
-    private static final Host DEFAULT_HOST = new Host("localhost", 30000);
+    private static final Host DEFAULT_HOST = new Host("localhost", 30001);
     private final ConfigSource systemConfig;
     private final ScriptingContainer jruby;
 
     interface PluginTask extends Task {
         @Config("hosts")
         @ConfigDefault("[]")
-        List<Host> getHosts();
+        List<String> getHosts();
 
         @Config("timeout_seconds")
         @ConfigDefault("3600")
@@ -62,7 +63,10 @@ public class RemoteServerExecutor implements ExecutorPlugin {
                 throw new UncheckedIOException(e);
             }
         } else {
-            control.transaction(outputSchema, inputTaskCount, new ExecutorImpl(inputTaskCount, task, task.getHosts()));
+            control.transaction(
+                    outputSchema,
+                    inputTaskCount,
+                    new ExecutorImpl(inputTaskCount, task, task.getHosts().stream().map(Host::of).collect(Collectors.toList())));
         }
     }
 
@@ -97,9 +101,9 @@ public class RemoteServerExecutor implements ExecutorPlugin {
             String pluginTaskJson = modelManager.writeObject(pluginTask);
             String processTaskJson = modelManager.writeObject(processTask);
 
-            SessionState sessionState = new SessionState(
+            ClientSession session = new ClientSession(
                     systemConfigJson, pluginTaskJson, processTaskJson, gemSpecs, pluginArchiveBytes, state, inputTaskCount, modelManager);
-            try (EmbulkClient client = EmbulkClient.open(sessionState, hosts)) {
+            try (EmbulkClient client = EmbulkClient.open(session, hosts)) {
                 client.createSession();
 
                 state.initialize(inputTaskCount, inputTaskCount);
@@ -110,7 +114,7 @@ public class RemoteServerExecutor implements ExecutorPlugin {
                     }
                     client.startTask(i);
                 }
-                sessionState.waitUntilCompleted(pluginTask.getTimeoutSeconds() + 1); // Add 1 sec to consider network latency
+                session.waitUntilCompleted(pluginTask.getTimeoutSeconds() + 1); // Add 1 sec to consider network latency
             } catch (InterruptedException | TimeoutException e) {
                 throw new IllegalStateException(e);
             } catch (IOException e) {
