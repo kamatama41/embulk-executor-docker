@@ -145,7 +145,7 @@ class ServerSession implements AutoCloseable {
         UpdateTaskStateData data;
         Queue<UpdateTaskStateData> buffer = bufferMap.get(taskIndex);
         while ((data = buffer.poll()) != null) {
-            connection.sendCommand(NotifyTaskStateCommand.ID, data);
+            connection.sendCommand(UpdateTaskStateCommand.ID, data);
         }
     }
 

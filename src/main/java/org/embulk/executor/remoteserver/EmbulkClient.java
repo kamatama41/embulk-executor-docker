@@ -33,7 +33,7 @@ class EmbulkClient implements AutoCloseable {
         SocketClient client = new SocketClient();
         client.registerSyncCommand(new InitializeSessionCommand(null));
         client.registerSyncCommand(new RemoveSessionCommand(null));
-        client.registerCommand(new NotifyTaskStateCommand(session));
+        client.registerCommand(new UpdateTaskStateCommand(session));
         client.registerListener(new Reconnector(client, session));
         client.open();
         for (Host host : hosts) {

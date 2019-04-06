@@ -3,11 +3,11 @@ package org.embulk.executor.remoteserver;
 import com.github.kamatama41.nsocket.Command;
 import com.github.kamatama41.nsocket.Connection;
 
-class NotifyTaskStateCommand implements Command<UpdateTaskStateData> {
-    static final String ID = "notify_task_state";
+class UpdateTaskStateCommand implements Command<UpdateTaskStateData> {
+    static final String ID = "update_task_state";
     private final ClientSession session;
 
-    NotifyTaskStateCommand(ClientSession session) {
+    UpdateTaskStateCommand(ClientSession session) {
         this.session = session;
     }
 
