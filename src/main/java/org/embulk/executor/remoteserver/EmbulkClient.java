@@ -100,7 +100,7 @@ class EmbulkClient extends SocketClient implements AutoCloseable {
             if(!session.isFinished()) {
                 try {
                     // Try reconnecting
-                    Connection newConnection = reconnect(connection);
+                    Connection newConnection = reconnect(connection, i -> !session.isFinished());
                     newConnection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(session));
                 } catch (IOException e) {
                     log.warn(String.format("A connection to %s could not be reconnected.", connection.getRemoteSocketAddress()), e);
