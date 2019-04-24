@@ -3,6 +3,7 @@ package org.embulk.executor.remoteserver;
 import org.embulk.config.ConfigSource;
 import org.embulk.test.EmbulkPluginTest;
 import org.embulk.test.EmbulkTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -25,6 +26,14 @@ class TestRemoteServerExecutor extends EmbulkPluginTest {
     private static final List<String> HOSTS = Arrays.asList("localhost", "localhost:30002");
     private static final Path OUTPUT_DIR = Paths.get("tmp", "output");
     private static final Path TEST_DIR = Paths.get("test");
+
+    @BeforeEach
+    void cleanupOutputDir() {
+        File outputDir = OUTPUT_DIR.toFile();
+        if (outputDir.exists()) {
+            Arrays.stream(outputDir.listFiles()).forEach(File::delete);
+        }
+    }
 
     @Test
     void testSimpleCase() {
@@ -49,7 +58,7 @@ class TestRemoteServerExecutor extends EmbulkPluginTest {
 
         ConfigSource outConfig = config().set("type", "file")
                 .set("path_prefix", "/output/out_file_")
-                .set("file_ext", "json")
+                .set("file_ext", "csv")
                 .set("formatter", config()
                         .set("type", "csv")
                         .set("header_line", false)
