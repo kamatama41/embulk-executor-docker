@@ -1,0 +1,7 @@
+type: file
+path_prefix: /output/out_file_
+file_ext: csv
+formatter:
+  type: csv
+  header_line: false
+  quote_policy: NONE

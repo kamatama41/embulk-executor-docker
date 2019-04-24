@@ -24,6 +24,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
@@ -42,8 +43,33 @@ public class RemoteServerExecutor implements ExecutorPlugin {
         @ConfigDefault("3600")
         int getTimeoutSeconds();
 
+        @Config("tls")
+        @ConfigDefault("false")
+        boolean getTLS();
+
+        @Config("key_store_p12")
+        @ConfigDefault("null")
+        Optional<P12File> getKeyStoreP12();
+
+        @Config("trust_store_p12")
+        @ConfigDefault("null")
+        Optional<P12File> getTrustStoreP12();
+
         @ConfigInject
         ModelManager getModelManager();
+
+        // Used for the local mode (mainly for testing)
+        @Config("__server_key_store_p12")
+        @ConfigDefault("null")
+        Optional<P12File> getServerKeyStoreP12();
+
+        @Config("__server_trust_store_p12")
+        @ConfigDefault("null")
+        Optional<P12File> getServerTrustStoreP12();
+
+        @Config("__server_enable_client_auth")
+        @ConfigDefault("false")
+        boolean getServerEnableClientAuth();
     }
 
     @Inject
@@ -56,8 +82,8 @@ public class RemoteServerExecutor implements ExecutorPlugin {
     public void transaction(ConfigSource config, Schema outputSchema, int inputTaskCount, Control control) {
         PluginTask task = config.loadConfig(PluginTask.class);
         if (task.getHosts().isEmpty()) {
-            log.info("Hosts is empty. Run with a local server.");
-            try (EmbulkServer _autoclosed = EmbulkServer.start(DEFAULT_HOST.getName(), DEFAULT_HOST.getPort(), 1)) {
+            log.info("Hosts is empty. Run as the local mode.");
+            try (EmbulkServer _autoclosed = startEmbulkServer(task)) {
                 control.transaction(outputSchema, inputTaskCount, new ExecutorImpl(inputTaskCount, task, Collections.singletonList(DEFAULT_HOST)));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -103,7 +129,15 @@ public class RemoteServerExecutor implements ExecutorPlugin {
 
             ClientSession session = new ClientSession(
                     systemConfigJson, pluginTaskJson, processTaskJson, gemSpecs, pluginArchiveBytes, state, inputTaskCount, modelManager);
-            try (EmbulkClient client = EmbulkClient.open(session, hosts)) {
+
+            TLSConfig tlsConfig = null;
+            if (pluginTask.getTLS()) {
+                tlsConfig = new TLSConfig();
+                pluginTask.getKeyStoreP12().ifPresent(tlsConfig::keyStore);
+                pluginTask.getTrustStoreP12().ifPresent(tlsConfig::trustStore);
+            }
+
+            try (EmbulkClient client = EmbulkClient.open(session, hosts, tlsConfig)) {
                 client.createSession();
 
                 state.initialize(inputTaskCount, inputTaskCount);
@@ -131,5 +165,18 @@ public class RemoteServerExecutor implements ExecutorPlugin {
                 return archive.dump(fos);
             }
         }
+    }
+
+    private EmbulkServer startEmbulkServer(PluginTask task) throws IOException {
+        TLSConfig tlsConfig = null;
+        if (task.getTLS()) {
+            tlsConfig = new TLSConfig();
+            task.getServerKeyStoreP12().ifPresent(tlsConfig::keyStore);
+            task.getServerTrustStoreP12().ifPresent(tlsConfig::trustStore);
+            if (task.getServerEnableClientAuth()) {
+                tlsConfig.enableClientAuth(true);
+            }
+        }
+        return EmbulkServer.start(DEFAULT_HOST.getName(), DEFAULT_HOST.getPort(), 1, tlsConfig);
     }
 }

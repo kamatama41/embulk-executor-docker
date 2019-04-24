@@ -1,0 +1,6 @@
+type: file
+path_prefix: src/test/resources/json/test
+parser:
+  type: json
+  columns:
+    - {name: a, type: long}

@@ -1,0 +1,5 @@
+type: remoteserver
+timeout_seconds: 5
+hosts:
+  - localhost
+  - localhost:30002

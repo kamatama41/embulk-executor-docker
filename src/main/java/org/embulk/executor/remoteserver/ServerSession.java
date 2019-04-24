@@ -173,7 +173,7 @@ class ServerSession implements AutoCloseable {
 
     @Override
     public void close() {
-        log.debug("Closing the session {}", id);
+        log.info("Closing the session {}", id);
         sessionRunner.shutdownNow();
     }
 }
