@@ -90,6 +90,7 @@ class EmbulkClient extends SocketClient implements AutoCloseable {
         for (Connection connection : getActiveConnections()) {
             connection.sendSyncCommand(RemoveSessionCommand.ID, session.getId());
         }
+        session.close();
         super.close();
     }
 
