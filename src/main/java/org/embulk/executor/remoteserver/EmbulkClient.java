@@ -29,8 +29,12 @@ class EmbulkClient extends SocketClient implements AutoCloseable {
 
     static EmbulkClient open(
             ClientSession session,
-            List<Host> hosts) throws IOException {
+            List<Host> hosts,
+            TLSConfig tlsConfig) throws IOException {
         EmbulkClient client = new EmbulkClient(session);
+        if (tlsConfig != null) {
+            client.setSslContext(tlsConfig.getSSLContext());
+        }
         client.open();
 
         for (Host host : hosts) {
