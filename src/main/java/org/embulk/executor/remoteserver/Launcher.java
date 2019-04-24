@@ -12,7 +12,7 @@ public class Launcher {
         Map<String, String> envVars = System.getenv();
         String host = envVars.getOrDefault("BIND_ADDRESS", "0.0.0.0");
         int port = Integer.parseInt(envVars.getOrDefault("PORT", "30001"));
-        int numOfWorkers = Integer.parseInt(envVars.getOrDefault("NUM_OF_WORKERS", "1"));
+        int numOfWorkers = Integer.parseInt(envVars.getOrDefault("NUM_OF_WORKERS", "5"));
         TLSConfig tlsConfig = createTLSConfig(envVars);
         configureLogLevel(envVars);
 
