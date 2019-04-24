@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-class ClientSession {
+class ClientSession implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ClientSession.class);
 
     private final String id;
@@ -78,6 +78,11 @@ class ClientSession {
         return isFinished;
     }
 
+    @Override
+    public void close() {
+        isFinished = true;
+    }
+
     synchronized void update(UpdateTaskStateData data) {
         switch (data.getTaskState()) {
             case STARTED:
@@ -115,7 +120,7 @@ class ClientSession {
                 throw new TaskExecutionException(message);
             }
         } finally {
-            isFinished = true;
+            close();
         }
     }
 

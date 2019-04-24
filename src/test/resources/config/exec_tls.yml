@@ -1,0 +1,13 @@
+type: remoteserver
+timeout_seconds: 5
+hosts:
+  - localhost:30003
+  - localhost:30004
+tls: true
+key_store_p12:
+  path: tmp/certs/client.p12
+  password: fghij
+trust_store_p12:
+  path: tmp/certs/ca-chain.p12
+  password: p@ssw0rd
+

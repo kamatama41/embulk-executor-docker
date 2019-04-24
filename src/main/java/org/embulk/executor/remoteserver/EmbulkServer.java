@@ -11,7 +11,7 @@ public class EmbulkServer implements AutoCloseable {
         this.server = server;
     }
 
-    static EmbulkServer start(String host, int port, int numOfWorkers) throws IOException {
+    static EmbulkServer start(String host, int port, int numOfWorkers, TLSConfig tlsConfig) throws IOException {
         SocketServer server = new SocketServer();
         ServerSessionRegistry sessionRegistry = new ServerSessionRegistry();
         server.setHost(host);
@@ -21,6 +21,12 @@ public class EmbulkServer implements AutoCloseable {
         server.registerSyncCommand(new InitializeSessionCommand(sessionRegistry));
         server.registerSyncCommand(new RemoveSessionCommand(sessionRegistry));
         server.registerCommand(new StartTaskCommand(sessionRegistry));
+        if (tlsConfig != null) {
+            server.setSslContext(tlsConfig.getSSLContext());
+            if (tlsConfig.isEnableClientAuth()) {
+                server.enableSslClientAuth();
+            }
+        }
         server.start();
         return new EmbulkServer(server);
     }

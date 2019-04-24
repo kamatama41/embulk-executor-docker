@@ -29,8 +29,12 @@ class EmbulkClient extends SocketClient implements AutoCloseable {
 
     static EmbulkClient open(
             ClientSession session,
-            List<Host> hosts) throws IOException {
+            List<Host> hosts,
+            TLSConfig tlsConfig) throws IOException {
         EmbulkClient client = new EmbulkClient(session);
+        if (tlsConfig != null) {
+            client.setSslContext(tlsConfig.getSSLContext());
+        }
         client.open();
 
         for (Host host : hosts) {
@@ -90,6 +94,7 @@ class EmbulkClient extends SocketClient implements AutoCloseable {
         for (Connection connection : getActiveConnections()) {
             connection.sendSyncCommand(RemoveSessionCommand.ID, session.getId());
         }
+        session.close();
         super.close();
     }
 
@@ -99,7 +104,7 @@ class EmbulkClient extends SocketClient implements AutoCloseable {
             if(!session.isFinished()) {
                 try {
                     // Try reconnecting
-                    Connection newConnection = reconnect(connection);
+                    Connection newConnection = reconnect(connection, i -> !session.isFinished());
                     newConnection.sendSyncCommand(InitializeSessionCommand.ID, toInitializeSessionData(session));
                 } catch (IOException e) {
                     log.warn(String.format("A connection to %s could not be reconnected.", connection.getRemoteSocketAddress()), e);

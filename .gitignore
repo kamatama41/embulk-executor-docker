@@ -12,3 +12,5 @@ build/
 .project
 *.iml
 .bundle
+
+test/Gemfile.lock
