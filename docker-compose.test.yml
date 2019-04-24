@@ -1,0 +1,49 @@
+version: '3.2'
+services:
+  server1: &server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      LOG_LEVEL: debug
+    ports:
+      - "30001:30001"
+    volumes:
+      - ./tmp/output:/output
+      - ./src/test/resources/json:/root/src/test/resources/json
+
+  server2:
+    <<: *server
+    ports:
+      - "30002:30001"
+
+  tls-server1: &tls-server
+    <<: *server
+    environment:
+      LOG_LEVEL: debug
+      ENABLE_TLS: "true"
+      ENABLE_TLS_CLIENT_AUTH: "true"
+      KEY_P12_PATH: /certs/embulk-server.local.p12
+      KEY_P12_PASSWORD: abcde
+      TRUST_P12_PATH: /certs/ca-chain.p12
+      TRUST_P12_PASSWORD: p@ssw0rd
+    ports:
+        - "30003:30001"
+    volumes:
+      - ./tmp/output:/output
+      - ./tmp/certs:/certs
+      - ./src/test/resources/json:/root/src/test/resources/json
+
+  tls-server2:
+    <<: *tls-server
+    ports:
+      - "30004:30001"
+
+  cert-generator:
+    image: kamatama41/test-cert-generator
+    volumes:
+      - ./tmp/certs:/root/work
+    environment:
+      SERVER_COMMON_NAME: embulk-server.local
+      SERVER_P12_PASSWORD: abcde
+      CLIENT_P12_PASSWORD: fghij

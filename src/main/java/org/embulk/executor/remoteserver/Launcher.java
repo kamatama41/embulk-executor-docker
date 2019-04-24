@@ -20,7 +20,7 @@ public class Launcher {
     }
 
     private static TLSConfig createTLSConfig(Map<String, String> envVars) {
-        if (!"true".equals(envVars.get("ENABLE_SSL"))) {
+        if (!"true".equals(envVars.get("ENABLE_TLS"))) {
             return null;
         }
 
@@ -37,7 +37,7 @@ public class Launcher {
             tlsConfig.trustStore(new P12File(trustP12Path, trustP12Password));
         }
 
-        if ("true".equals(envVars.get("ENABLE_SSL_CLIENT_AUTH"))) {
+        if ("true".equals(envVars.get("ENABLE_TLS_CLIENT_AUTH"))) {
             tlsConfig.enableClientAuth(true);
         }
         return tlsConfig;
