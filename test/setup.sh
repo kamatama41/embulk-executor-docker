@@ -7,8 +7,9 @@ rm -rf tmp/output && mkdir -p tmp/output
 rm -rf tmp/certs && mkdir -p tmp/certs
 ./gradlew embulk_bundle_--clean -Pgemfile=test/Gemfile -PbundlePath=${project_root}/tmp/vendor/bundle
 
+cd ${project_root}/test
 if [[ "${SKIP_DOCKER_BUILD}" != "true" ]]; then
-  docker-compose -f docker-compose.test.yml build
+  docker-compose build
 fi
-docker-compose -f docker-compose.test.yml run cert-generator
-docker-compose -f docker-compose.test.yml up -d server1 server2 tls-server1 tls-server2
+docker-compose run cert-generator
+docker-compose down && docker-compose up -d server1 server2 tls-server1 tls-server2
