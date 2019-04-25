@@ -20,12 +20,12 @@ services:
     <<: *server
     environment:
       LOG_LEVEL: debug
-      ENABLE_TLS: "true"
-      ENABLE_TLS_CLIENT_AUTH: "true"
-      KEY_P12_PATH: /certs/embulk-server.local.p12
-      KEY_P12_PASSWORD: abcde
-      TRUST_P12_PATH: /certs/ca-chain.p12
-      TRUST_P12_PASSWORD: p@ssw0rd
+      USE_TLS: "true"
+      REQUIRE_TLS_CLIENT_AUTH: "true"
+      CERT_P12_PATH: /certs/embulk-server.local.p12
+      CERT_P12_PASSWORD: abcde
+      CA_P12_PATH: /certs/ca-chain.p12
+      CA_P12_PASSWORD: p@ssw0rd
     ports:
         - "30003:30001"
     volumes:

@@ -43,33 +43,33 @@ public class RemoteServerExecutor implements ExecutorPlugin {
         @ConfigDefault("3600")
         int getTimeoutSeconds();
 
-        @Config("tls")
+        @Config("use_tls")
         @ConfigDefault("false")
-        boolean getTLS();
+        boolean getUseTls();
 
-        @Config("key_store_p12")
+        @Config("cert_p12_file")
         @ConfigDefault("null")
-        Optional<P12File> getKeyStoreP12();
+        Optional<P12File> getCertP12File();
 
-        @Config("trust_store_p12")
+        @Config("ca_p12_file")
         @ConfigDefault("null")
-        Optional<P12File> getTrustStoreP12();
+        Optional<P12File> getCaP12File();
 
         @ConfigInject
         ModelManager getModelManager();
 
         // Used for the local mode (mainly for testing)
-        @Config("__server_key_store_p12")
+        @Config("__server_cert_p12_file")
         @ConfigDefault("null")
-        Optional<P12File> getServerKeyStoreP12();
+        Optional<P12File> getServerCertP12File();
 
-        @Config("__server_trust_store_p12")
+        @Config("__server_ca_p12_file")
         @ConfigDefault("null")
-        Optional<P12File> getServerTrustStoreP12();
+        Optional<P12File> getServerCaP12File();
 
-        @Config("__server_enable_client_auth")
+        @Config("__server_require_tls_client_auth")
         @ConfigDefault("false")
-        boolean getServerEnableClientAuth();
+        boolean getServerRequireTlsClientAuth();
     }
 
     @Inject
@@ -131,10 +131,10 @@ public class RemoteServerExecutor implements ExecutorPlugin {
                     systemConfigJson, pluginTaskJson, processTaskJson, gemSpecs, pluginArchiveBytes, state, inputTaskCount, modelManager);
 
             TLSConfig tlsConfig = null;
-            if (pluginTask.getTLS()) {
+            if (pluginTask.getUseTls()) {
                 tlsConfig = new TLSConfig();
-                pluginTask.getKeyStoreP12().ifPresent(tlsConfig::keyStore);
-                pluginTask.getTrustStoreP12().ifPresent(tlsConfig::trustStore);
+                pluginTask.getCertP12File().ifPresent(tlsConfig::keyStore);
+                pluginTask.getCaP12File().ifPresent(tlsConfig::trustStore);
             }
 
             try (EmbulkClient client = EmbulkClient.open(session, hosts, tlsConfig)) {
@@ -169,11 +169,11 @@ public class RemoteServerExecutor implements ExecutorPlugin {
 
     private EmbulkServer startEmbulkServer(PluginTask task) throws IOException {
         TLSConfig tlsConfig = null;
-        if (task.getTLS()) {
+        if (task.getUseTls()) {
             tlsConfig = new TLSConfig();
-            task.getServerKeyStoreP12().ifPresent(tlsConfig::keyStore);
-            task.getServerTrustStoreP12().ifPresent(tlsConfig::trustStore);
-            if (task.getServerEnableClientAuth()) {
+            task.getServerCertP12File().ifPresent(tlsConfig::keyStore);
+            task.getServerCaP12File().ifPresent(tlsConfig::trustStore);
+            if (task.getServerRequireTlsClientAuth()) {
                 tlsConfig.enableClientAuth(true);
             }
         }

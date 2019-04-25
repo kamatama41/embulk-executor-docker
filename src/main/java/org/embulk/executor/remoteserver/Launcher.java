@@ -20,24 +20,24 @@ public class Launcher {
     }
 
     private static TLSConfig createTLSConfig(Map<String, String> envVars) {
-        if (!"true".equals(envVars.get("ENABLE_TLS"))) {
+        if (!"true".equals(envVars.get("USE_TLS"))) {
             return null;
         }
 
         TLSConfig tlsConfig = new TLSConfig();
-        String keyP12Path = envVars.get("KEY_P12_PATH");
-        String keyP12Password = envVars.get("KEY_P12_PASSWORD");
+        String keyP12Path = envVars.get("CERT_P12_PATH");
+        String keyP12Password = envVars.get("CERT_P12_PASSWORD");
         if (keyP12Path != null && keyP12Password != null) {
             tlsConfig.keyStore(new P12File(keyP12Path, keyP12Password));
         }
 
-        String trustP12Path = envVars.get("TRUST_P12_PATH");
-        String trustP12Password = envVars.get("TRUST_P12_PASSWORD");
+        String trustP12Path = envVars.get("CA_P12_PATH");
+        String trustP12Password = envVars.get("CA_P12_PASSWORD");
         if (trustP12Path != null && trustP12Password != null) {
             tlsConfig.trustStore(new P12File(trustP12Path, trustP12Password));
         }
 
-        if ("true".equals(envVars.get("ENABLE_TLS_CLIENT_AUTH"))) {
+        if ("true".equals(envVars.get("REQUIRE_TLS_CLIENT_AUTH"))) {
             tlsConfig.enableClientAuth(true);
         }
         return tlsConfig;
