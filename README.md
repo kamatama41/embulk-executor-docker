@@ -14,11 +14,11 @@ Embulk executor plugin to run Embulk tasks on remote servers.
 
 - **hosts**: List of remote servers (`hostname` or `hostname:port`, default port is `30001`). If not specified, the executor runs as the local mode, which starts an Embulk server on its own process (array of string)
 - **timeout_seconds**: Timeout seconds of the whole execution (integer, default: `3600`)
-- **tls**: Enable to connect server over TLS (boolean, default: `false`)
-- **key_store_p12**: Information of a P12 file used as a [KeyManager](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/KeyManager.html) to register your client certificate. It would be needed when client auth mode is enabled on Embulk server.
+- **use_tls**: Enable to connect server over TLS (boolean, default: `false`)
+- **cert_p12_file**: Information of a P12 file used as your client certificate. It would be needed when client authentication is enabled on Embulk server.
   - **path**: Path of the file (string, required)
   - **password**: Password of the file (string, required)
-- **trust_store_p12**: Information of a P12 file used as a [TrustManager](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/TrustManager.html) to register a CA certificate. It would be needed when Embulk server uses unknown CA's certificate.
+- **ca_p12_file**: Information of a P12 file used as CA certificate. It would be needed when Embulk server uses a certificate in which unknown CA signed.
   - **path**: Path of the file (string, required)
   - **password**: Password of the file (string, required)
 
@@ -49,12 +49,10 @@ There are some environment variables to configure the server
 
 - `BIND_ADDRESS`: Bind address of the server (default: `0.0.0.0`)
 - `PORT`: Port number to listen (default: `30001`)
-- `ENABLE_TLS`: Try to connect to client via TLS if `true` (default: `false`)
-- `ENABLE_TLS_CLIENT_AUTH`: Require client authentication if `true` (default: `false`) 
-- `KEY_P12_PATH`: Path of the P12 file used as a KeyManager
-- `KEY_P12_PASSWORD`: Password of the Key P12 file
-- `TRUST_P12_PATH`: Path of the P12 file used as a TrustManager
-- `TRUST_P12_PASSWORD`: Password of the Trust P12 file
+- `USE_TLS`: Try to connect to client via TLS if `true` (default: `false`)
+- `REQUIRE_TLS_CLIENT_AUTH`: Require client authentication if `true` (default: `false`) 
+- `CERT_P12_PATH`, `CERT_P12_PASSWORD`: Path and password of the P12 file for server certificate. Ignored unless both is set.
+- `CA_P12_PATH`, `CA_P12_PASSWORD`: Path and password of the P12 file for CA certificate. Ignored unless both is set.
 
 ## Build
 
