@@ -10,7 +10,6 @@ jobs:
             - v1-gradle-{{ checksum "gradle/dependency-locks/compileClasspath.lockfile" }}-{{ checksum "gradle/dependency-locks/testCompileClasspath.lockfile" }}
             - v1-gradle-
       - run: ./test/setup.sh
-      - run: sudo chown -R circleci.circleci tmp/certs
       - run: ./gradlew check --info
       - run:
           name: Save test results
