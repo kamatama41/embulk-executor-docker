@@ -2,15 +2,14 @@ version: '3.2'
 services:
   server1: &server
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
     environment:
       LOG_LEVEL: debug
     ports:
       - "30001:30001"
     volumes:
-      - ./tmp/output:/output
-      - ./src/test/resources/json:/root/src/test/resources/json
+      - ../tmp/output:/output
+      - ../src/test/resources/json:/root/src/test/resources/json
 
   server2:
     <<: *server
@@ -30,9 +29,9 @@ services:
     ports:
         - "30003:30001"
     volumes:
-      - ./tmp/output:/output
-      - ./tmp/certs:/certs
-      - ./src/test/resources/json:/root/src/test/resources/json
+      - ../tmp/output:/output
+      - ../tmp/certs:/certs
+      - ../src/test/resources/json:/root/src/test/resources/json
 
   tls-server2:
     <<: *tls-server
@@ -42,7 +41,7 @@ services:
   cert-generator:
     image: kamatama41/test-cert-generator
     volumes:
-      - ./tmp/certs:/root/work
+      - ../tmp/certs:/root/work
     environment:
       SERVER_COMMON_NAME: embulk-server.local
       SERVER_P12_PASSWORD: abcde
