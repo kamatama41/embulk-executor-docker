@@ -8,43 +8,41 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
 
 class TLSConfig {
     private P12File keyStore = null;
-    private P12File trustStore = null;
+    private String caCertPath = null;
     private boolean enableClientAuth = false;
 
     TLSConfig() {
     }
 
-    TLSConfig keyStore(P12File keyStore) {
+    void setKeyStore(P12File keyStore) {
         this.keyStore = keyStore;
-        return this;
     }
 
-    TLSConfig trustStore(P12File trustStore) {
-        this.trustStore = trustStore;
-        return this;
-    }
-
-    TLSConfig enableClientAuth(boolean enableClientAuth) {
+    void setEnableClientAuth(boolean enableClientAuth) {
         this.enableClientAuth = enableClientAuth;
-        return this;
+    }
+
+    void setCaCertPath(String caCertPath) {
+        this.caCertPath = caCertPath;
     }
 
     SSLContext getSSLContext() {
         try {
             KeyManager[] keyManagers = null;
             if (keyStore != null) {
-                KeyStore ks = load(keyStore);
+                KeyStore ks = loadKeyStore(keyStore);
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
                 kmf.init(ks, keyStore.getPassword().toCharArray());
                 keyManagers = kmf.getKeyManagers();
             }
 
             TrustManager[] trustManagers = null;
-            if (trustStore != null) {
-                KeyStore ts = load(trustStore);
+            if (caCertPath != null) {
+                KeyStore ts = loadTrustStore(caCertPath);
                 TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
                 tmf.init(ts);
                 trustManagers = tmf.getTrustManagers();
@@ -62,13 +60,23 @@ class TLSConfig {
         return enableClientAuth;
     }
 
-    private static KeyStore load(P12File file) {
+    private static KeyStore loadKeyStore(P12File file) {
         try (InputStream keyStoreIS = new FileInputStream(file.getPath())) {
             KeyStore ks = KeyStore.getInstance("PKCS12");
             ks.load(keyStoreIS, file.getPassword().toCharArray());
             return ks;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static KeyStore loadTrustStore(String path) throws Exception {
+        try (FileInputStream inputStream = new FileInputStream(path)) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            KeyStore ks = KeyStore.getInstance("JKS");
+            ks.load(null, null);
+            ks.setCertificateEntry("ca_cert", cf.generateCertificate(inputStream));
+            return ks;
         }
     }
 }
