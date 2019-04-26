@@ -15,12 +15,10 @@ Embulk executor plugin to run Embulk tasks on remote servers.
 - **hosts**: List of remote servers (`hostname` or `hostname:port`, default port is `30001`). If not specified, the executor runs as the local mode, which starts an Embulk server on its own process (array of string)
 - **timeout_seconds**: Timeout seconds of the whole execution (integer, default: `3600`)
 - **use_tls**: Enable to connect server over TLS (boolean, default: `false`)
-- **cert_p12_file**: Information of a P12 file used as your client certificate. It would be needed when client authentication is enabled on Embulk server.
+- **cert_p12_file**: Information of a PKCS12 file used as your client certificate. It would be needed when client authentication is enabled on Embulk server.
   - **path**: Path of the file (string, required)
   - **password**: Password of the file (string, required)
-- **ca_p12_file**: Information of a P12 file used as CA certificate. It would be needed when Embulk server uses a certificate in which unknown CA signed.
-  - **path**: Path of the file (string, required)
-  - **password**: Password of the file (string, required)
+- **ca_cert_path**: Path of a CA certificate file. It would be needed when Embulk server uses a certificate signed by an unknown CA.
 
 ## Example
 
@@ -51,8 +49,8 @@ There are some environment variables to configure the server
 - `PORT`: Port number to listen (default: `30001`)
 - `USE_TLS`: Try to connect to client via TLS if `true` (default: `false`)
 - `REQUIRE_TLS_CLIENT_AUTH`: Require client authentication if `true` (default: `false`) 
-- `CERT_P12_PATH`, `CERT_P12_PASSWORD`: Path and password of the P12 file for server certificate. Ignored unless both is set.
-- `CA_P12_PATH`, `CA_P12_PASSWORD`: Path and password of the P12 file for CA certificate. Ignored unless both is set.
+- `CERT_P12_PATH`, `CERT_P12_PASSWORD`: Path and password of the PKCS12 file for server certificate. Ignored unless both is set.
+- `CA_CERT_PATH`: Path of the CA certificate file. It would be needed when client authentication is enabled and client certificate is signed by an unknown CA.
 
 ## Build
 

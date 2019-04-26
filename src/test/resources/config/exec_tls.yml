@@ -7,7 +7,4 @@ use_tls: true
 cert_p12_file:
   path: tmp/certs/client.p12
   password: fghij
-ca_p12_file:
-  path: tmp/certs/ca-chain.p12
-  password: p@ssw0rd
-
+ca_cert_path: tmp/certs/ca-chain.cert.pem

@@ -51,9 +51,9 @@ public class RemoteServerExecutor implements ExecutorPlugin {
         @ConfigDefault("null")
         Optional<P12File> getCertP12File();
 
-        @Config("ca_p12_file")
+        @Config("ca_cert_path")
         @ConfigDefault("null")
-        Optional<P12File> getCaP12File();
+        Optional<String> getCaCertPath();
 
         @ConfigInject
         ModelManager getModelManager();
@@ -63,9 +63,9 @@ public class RemoteServerExecutor implements ExecutorPlugin {
         @ConfigDefault("null")
         Optional<P12File> getServerCertP12File();
 
-        @Config("__server_ca_p12_file")
+        @Config("__server_ca_cert_path")
         @ConfigDefault("null")
-        Optional<P12File> getServerCaP12File();
+        Optional<String> getServerCaCertPath();
 
         @Config("__server_require_tls_client_auth")
         @ConfigDefault("false")
@@ -133,8 +133,8 @@ public class RemoteServerExecutor implements ExecutorPlugin {
             TLSConfig tlsConfig = null;
             if (pluginTask.getUseTls()) {
                 tlsConfig = new TLSConfig();
-                pluginTask.getCertP12File().ifPresent(tlsConfig::keyStore);
-                pluginTask.getCaP12File().ifPresent(tlsConfig::trustStore);
+                pluginTask.getCertP12File().ifPresent(tlsConfig::setKeyStore);
+                pluginTask.getCaCertPath().ifPresent(tlsConfig::setCaCertPath);
             }
 
             try (EmbulkClient client = EmbulkClient.open(session, hosts, tlsConfig)) {
@@ -171,11 +171,9 @@ public class RemoteServerExecutor implements ExecutorPlugin {
         TLSConfig tlsConfig = null;
         if (task.getUseTls()) {
             tlsConfig = new TLSConfig();
-            task.getServerCertP12File().ifPresent(tlsConfig::keyStore);
-            task.getServerCaP12File().ifPresent(tlsConfig::trustStore);
-            if (task.getServerRequireTlsClientAuth()) {
-                tlsConfig.enableClientAuth(true);
-            }
+            task.getServerCertP12File().ifPresent(tlsConfig::setKeyStore);
+            task.getServerCaCertPath().ifPresent(tlsConfig::setCaCertPath);
+            tlsConfig.setEnableClientAuth(task.getServerRequireTlsClientAuth());
         }
         return EmbulkServer.start(DEFAULT_HOST.getName(), DEFAULT_HOST.getPort(), 1, tlsConfig);
     }
