@@ -24,8 +24,7 @@ services:
       REQUIRE_TLS_CLIENT_AUTH: "true"
       CERT_P12_PATH: /certs/embulk-server.local.p12
       CERT_P12_PASSWORD: abcde
-      CA_P12_PATH: /certs/ca-chain.p12
-      CA_P12_PASSWORD: p@ssw0rd
+      CA_CERT_PATH: /certs/ca-chain.cert.pem
     ports:
         - "30003:30001"
     volumes:

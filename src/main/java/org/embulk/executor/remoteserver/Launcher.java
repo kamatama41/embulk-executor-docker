@@ -28,18 +28,15 @@ public class Launcher {
         String keyP12Path = envVars.get("CERT_P12_PATH");
         String keyP12Password = envVars.get("CERT_P12_PASSWORD");
         if (keyP12Path != null && keyP12Password != null) {
-            tlsConfig.keyStore(new P12File(keyP12Path, keyP12Password));
+            tlsConfig.setKeyStore(new P12File(keyP12Path, keyP12Password));
         }
 
-        String trustP12Path = envVars.get("CA_P12_PATH");
-        String trustP12Password = envVars.get("CA_P12_PASSWORD");
-        if (trustP12Path != null && trustP12Password != null) {
-            tlsConfig.trustStore(new P12File(trustP12Path, trustP12Password));
+        String caCertPath = envVars.get("CA_CERT_PATH");
+        if (caCertPath != null) {
+            tlsConfig.setCaCertPath(caCertPath);
         }
 
-        if ("true".equals(envVars.get("REQUIRE_TLS_CLIENT_AUTH"))) {
-            tlsConfig.enableClientAuth(true);
-        }
+        tlsConfig.setEnableClientAuth("true".equals(envVars.get("REQUIRE_TLS_CLIENT_AUTH")));
         return tlsConfig;
     }
 
