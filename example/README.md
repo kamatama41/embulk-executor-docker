@@ -9,7 +9,7 @@ $ embulk bundle --path vendor/bundle
 Run `docker-compose up`
 
 ```sh
-$ docker-compose -f docker-compse.yml up
+$ docker-compose up
 Creating example_remote1_1 ... done
 Attaching to example_remote1_1
 remote1_1  | 15:11:59.045 [main] INFO  c.g.kamatama41.nsocket.SocketServer - Starting server..
